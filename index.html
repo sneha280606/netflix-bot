@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Netflix Chatbot Demo</title>
+  <style>
+    /* Reset */
+    * {margin:0; padding:0; box-sizing:border-box;}
+    body {font-family: Arial, sans-serif; background:#141414; color:#fff; overflow-x:hidden;}
+    html {scroll-behavior:smooth;}
+
+    /* Navbar */
+    nav {
+      position: fixed;
+      top:0;
+      left:0;
+      width:100%;
+      padding:15px 40px;
+      background:#141414;
+      display:flex;
+      align-items:center;
+      z-index:1000;
+    }
+    .logo {font-size:26px; font-weight:bold; color:#e50914;}
+    ul.nav-links {
+      list-style:none;
+      display:flex;
+      gap:25px;
+      margin-left:auto; /* Push login button to the right */
+    }
+    ul.nav-links li a {
+      color:#fff;
+      text-decoration:none;
+      font-size:15px;
+      transition:0.3s;
+    }
+    ul.nav-links li a:hover {color:#e50914;}
+    .login-btn {
+      background:#e50914;
+      color:#fff;
+      padding:6px 14px;
+      border-radius:3px;
+      text-decoration:none;
+      margin-left:20px;
+      transition:0.3s;
+    }
+    .login-btn:hover {background:#b20710;}
+
+    /* Hero Banner */
+    .hero {
+      background: linear-gradient(to bottom, rgba(20,20,20,0.4), rgba(20,20,20,1)),
+                  url('https://image.tmdb.org/t/p/original/2uNW4WbgBXL25BAbXGLnLqX71Sw.jpg') no-repeat center/cover;
+      height: 90vh;
+      display:flex; flex-direction:column; justify-content:flex-end;
+      padding:0 40px 60px 40px;
+    }
+    .hero h1 {font-size:3em; margin-bottom:0.5em;}
+    .hero p {max-width:600px; margin-bottom:1em;}
+    .hero-buttons button {
+      background:#e50914; border:none; padding:10px 20px; margin-right:10px;
+      color:#fff; border-radius:3px; cursor:pointer; font-size:16px; transition:0.3s;
+    }
+    .hero-buttons button:hover {background:#b20710;}
+
+    /* Movie Rows */
+    .row {margin:30px 0;}
+    .row h2 {margin-left:40px; margin-bottom:10px;}
+    .row-posters {display:flex; overflow-x:scroll; padding-left:40px; gap:10px;}
+    .row-posters::-webkit-scrollbar {display:none;}
+    .row-posters img {
+      max-height:180px; transition: transform 0.3s; cursor:pointer; border-radius:5px;
+    }
+    .row-posters img:hover {transform:scale(1.15);}
+
+    /* About Section */
+    #about {padding:5em 2em; background:#000; text-align:center;}
+    #about h2 {font-size:2em; margin-bottom:1em; color:#e50914;}
+    #about p {max-width:800px; margin:0 auto 2em; color:#ccc;}
+    .features {display:grid; grid-template-columns:repeat(auto-fit,minmax(250px,1fr)); gap:2em; margin-top:2em;}
+    .card {background:#1f1f1f; padding:2em; border-radius:10px; box-shadow:0 4px 10px rgba(0,0,0,0.6);}
+    .card h3 {margin-bottom:0.5em; color:#fff;}
+    .card p {color:#ccc;}
+
+    /* Feedback Section */
+    #feedback {background:#202020; padding:5em 2em; text-align:center;}
+    #feedback h2 {color:#e50914; margin-bottom:1em;}
+    .stars {font-size:2em; margin-bottom:1em;}
+    .stars span {cursor:pointer; color:#666;}
+    .stars span.active {color:#FFD700;}
+    textarea {width:100%; max-width:600px; height:120px; padding:1em; border:none; border-radius:8px; margin-top:1em; resize:none;}
+
+    /* Footer */
+    footer {background:#000; text-align:center; padding:2em; margin-top:3em; color:#ccc;}
+    footer a {color:#e50914; text-decoration:none; margin:0 5px;}
+    footer a:hover {text-decoration:underline;}
+
+    /* Modals */
+    .modal {display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); justify-content:center; align-items:center; z-index:2000;}
+    .modal:target {display:flex;}
+    .modal-content {background:#1f1f1f; color:#fff; padding:2em; border-radius:12px; width:400px; max-width:90%; text-align:center; position:relative;}
+    .modal-content h3 {margin-bottom:1em; color:#e50914;}
+    .modal-content input, .modal-content textarea {width:100%; padding:0.8em; margin:0.5em 0; border:none; border-radius:6px;}
+    .modal-content button {background:#e50914; border:none; color:#fff; padding:0.8em; border-radius:6px; cursor:pointer; width:100%;}
+    .modal-content button:hover {background:#b20710;}
+    .close {position:absolute; top:10px; right:15px; font-size:1.5em; color:#fff; text-decoration:none;}
+  </style>
+</head>
+<body>
+
+  <!-- Navbar -->
+  <nav>
+    <div class="logo">Netflix</div>
+    <ul class="nav-links">
+      <li><a href="#home">Home</a></li>
+      <li><a href="#about">About</a></li>
+      <li><a href="#feedback">Feedback</a></li>
+      <li><a href="#footer">Contact</a></li>
+      <li><a href="#sentimentModal">Sentiment</a></li>
+      <li><a href="#ttsModal">Text-to-Speech</a></li>
+    </ul>
+    <a href="#loginModal" class="login-btn">Login</a>
+  </nav>
+
+  <!-- Hero Banner -->
+  <header class="hero" id="home">
+    <h1>Unlimited Movies, Chat & AI Tools</h1>
+    <p>Experience a Netflix-style interface with integrated chatbot features.</p>
+    <div class="hero-buttons">
+      <button>Play</button>
+      <button>More Info</button>
+    </div>
+  </header>
+
+  <!-- Movie Rows -->
+  <div class="row">
+    <h2>Trending Now</h2>
+    <div class="row-posters">
+      <img src="https://image.tmdb.org/t/p/w500/2uNW4WbgBXL25BAbXGLnLqX71Sw.jpg" alt="Movie1">
+      <img src="https://image.tmdb.org/t/p/w500/8UlWHLMpgZm9bx6QYh0NFoq67TZ.jpg" alt="Movie2">
+      <img src="https://image.tmdb.org/t/p/w500/6agKYU5IQFpuDyUYPu39w7UCRrJ.jpg" alt="Movie3">
+      <img src="https://image.tmdb.org/t/p/w500/q719jXXEzOoYaps6babgKnONONX.jpg" alt="Movie4">
+      <img src="https://image.tmdb.org/t/p/w500/xCEg6KowNISWvMh8GvPSxtdf9TO.jpg" alt="Movie5">
+    </div>
+  </div>
+
+  <div class="row">
+    <h2>Top Picks</h2>
+    <div class="row-posters">
+      <img src="https://image.tmdb.org/t/p/w500/k68nPLbIST6NP96JmTxmZijEvCA.jpg" alt="Movie6">
+      <img src="https://encrypted-tbn2.gstatic.com/images?q=tbn:ANd9GcSXWPlbq4HXWtYa6QzQf2gSM2dWKQVxEnpYPzY8C61Lz1xigYiErcGJuknq0PIBNAxYkaAX" alt="Movie7">
+      <img src="https://image.tmdb.org/t/p/w500/6kbAMLteGO8yyewYau6bJ683sw7.jpg" alt="Movie8">
+      <img src="https://encrypted-tbn2.gstatic.com/images?q=tbn:ANd9GcTFCmgArBOHHvm1FIfQowvYRP0K1DaalRyzqjx6rGri_sBcQO0dMT0LSHar5u4Qpo0U9o3uf4bRa2AsxKMemN3DooW53sd1eVzbHYEiScAf" alt="Movie9">
+      <img src="https://image.tmdb.org/t/p/w500/pU3bnutJU91u3b4IeRPQTOP8jhV.jpg" alt="Movie10">
+    </div>
+  </div>
+
+  <!-- About Section -->
+  <section id="about">
+    <h2>About This Project</h2>
+    <p>This project is a Netflix-style demo website integrated with chatbot features. Users can explore movie-style content, provide feedback, and interact with tools like sentiment analysis and text-to-speech. The interface is fully responsive and designed to mimic Netflix’s dark theme with hover effects and scrolling movie rows.</p>
+    <div class="features">
+      <div class="card">
+        <h3>🎬 Netflix UI</h3>
+        <p>Modern design inspired by Netflix with hero banner and scrollable movie rows.</p>
+      </div>
+      <div class="card">
+        <h3>💬 Interactive Tools</h3>
+        <p>Includes chatbot features such as sentiment analysis and text-to-speech functionality.</p>
+      </div>
+      <div class="card">
+        <h3>📱 Responsive</h3>
+        <p>Optimized for desktop and mobile devices for seamless user experience.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Feedback Section -->
+  <section id="feedback">
+    <h2>Feedback</h2>
+    <div class="stars">
+      <span>★</span><span>★</span><span>★</span><span>★</span><span>★</span>
+    </div>
+    <textarea placeholder="Write your feedback here..."></textarea><br>
+    <button class="btn-primary">Submit</button>
+  </section>
+
+  <!-- Footer / Contact -->
+  <footer id="footer">
+    <p>Contact us at: <a href="mailto:support@college.edu">support@college.edu</a></p>
+    <p>&copy; 2025 Netflix Chatbot Demo</p>
+    <p>
+      <a href="#">FAQ</a> | 
+      <a href="#">Help Center</a> | 
+      <a href="#">Terms of Use</a> | 
+      <a href="#">Privacy</a>
+    </p>
+  </footer>
+
+  <!-- Login Modal -->
+  <div id="loginModal" class="modal">
+    <div class="modal-content">
+      <a href="#" class="close">&times;</a>
+      <h3>Login</h3>
+      <input type="text" placeholder="Username">
+      <input type="password" placeholder="Password">
+      <button>Login</button>
+    </div>
+  </div>
+
+  <!-- Sentiment Modal -->
+  <div id="sentimentModal" class="modal">
+    <div class="modal-content">
+      <a href="#" class="close">&times;</a>
+      <h3>Sentiment Analyzer</h3>
+      <textarea placeholder="Type your text..."></textarea>
+      <button id="analyzeBtn">Analyze</button>
+    </div>
+  </div>
+
+  <!-- Text-to-Speech Modal -->
+  <div id="ttsModal" class="modal">
+    <div class="modal-content">
+      <a href="#" class="close">&times;</a>
+      <h3>Text-to-Speech</h3>
+      <textarea placeholder="Enter text to speak..."></textarea>
+      <button id="speakBtn">Speak</button>
+    </div>
+  </div>
+
+  <!-- Scripts -->
+  <script>
+    // Feedback stars
+    document.querySelectorAll('.stars span').forEach(star => {
+      star.addEventListener('click', () => {
+        document.querySelectorAll('.stars span').forEach(s => s.classList.remove('active'));
+        star.classList.add('active');
+      });
+    });
+
+    // Text-to-Speech
+    document.getElementById("speakBtn").addEventListener("click", () => {
+      let text = document.querySelector("#ttsModal textarea").value;
+      if(text.trim()!=="") {
+        let utter = new SpeechSynthesisUtterance(text);
+        speechSynthesis.speak(utter);
+      } else {
+        alert("Please enter text to speak!");
+      }
+    });
+
+    // Sentiment Analysis
+    document.getElementById("analyzeBtn").addEventListener("click", () => {
+      let text = document.querySelector("#sentimentModal textarea").value.toLowerCase();
+      if(text.trim()===""){ alert("Please enter some text!"); return; }
+      let positiveWords=["good","great","happy","love","awesome"];
+      let negativeWords=["bad","sad","hate","angry","poor"];
+      let score=0;
+      positiveWords.forEach(w => { if(text.includes(w)) score++; });
+      negativeWords.forEach(w => { if(text.includes(w)) score--; });
+      let result="Neutral 😐";
+      if(score>0) result="Positive 😊";
+      else if(score<0) result="Negative 😞";
+      alert("Sentiment: " + result);
+    });
+  </script>
+<script>
+  // Login functionality
+  document.querySelector("#loginModal button").addEventListener("click", () => {
+    let username = document.querySelector("#loginModal input[type='text']").value;
+    let password = document.querySelector("#loginModal input[type='password']").value;
+
+    if(username.trim() === "" || password.trim() === ""){
+      alert("Please enter both username and password!");
+      return;
+    }
+
+    if(!username.includes("@gmail.com")){
+      alert("Please enter a valid Gmail address!");
+      return;
+    }
+
+    alert("Successfully logged in!");
+    // Close modal and scroll to home
+    document.getElementById("loginModal").style.display = "none";
+    window.location.hash = "#home";
+  });
+</script>
+<!-- IBM Watson Assistant Web Chat -->
+
+<script>
+  window.watsonAssistantChatOptions = {
+    integrationID: "2d138892-a893-4683-9991-e39686b3945d", // The ID of this integration.
+    region: "au-syd", // The region your integration is hosted in.
+    serviceInstanceID: "8eb73d09-3feb-4646-949b-e8fbb0d9b6f4", // The ID of your service instance.
+    onLoad: async (instance) => { await instance.render(); }
+  };
+  setTimeout(function(){
+    const t=document.createElement('script');
+    t.src="https://web-chat.global.assistant.watson.appdomain.cloud/versions/" + (window.watsonAssistantChatOptions.clientVersion || 'latest') + "/WatsonAssistantChatEntry.js";
+    document.head.appendChild(t);
+  });
+</script>
+</body>
+</html>
